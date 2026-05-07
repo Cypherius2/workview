@@ -1,0 +1,26 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0a1628"/>
+            <stop offset="100%" stop-color="#1e90ff"/>
+        </linearGradient>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+    <!-- M Shape -->
+    <path d="M25 85V35L45 55L60 35L75 55V35V85H90V35L60 15L30 35V85H25Z" fill="url(#logoGradient)" filter="url(#glow)"/>
+    <!-- Circuit Nodes -->
+    <circle cx="30" cy="35" r="4" fill="#1e90ff"/>
+    <circle cx="45" cy="55" r="3" fill="#4da6ff"/>
+    <circle cx="75" cy="55" r="3" fill="#4da6ff"/>
+    <circle cx="90" cy="35" r="4" fill="#1e90ff"/>
+    <!-- Circuit Lines -->
+    <line x1="25" y1="35" x2="30" y2="35" stroke="#1e90ff" stroke-width="2"/>
+    <line x1="75" y1="55" x2="90" y2="55" stroke="#1e90ff" stroke-width="2"/>
+    <line x1="90" y1="55" x2="90" y2="35" stroke="#1e90ff" stroke-width="2"/>
+</svg>
