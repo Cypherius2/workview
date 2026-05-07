@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkView - Powered by MiraTech</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="assets/miratech-icon.svg">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#0a1628"/>
+                            <stop offset="100%" style="stop-color:#1e90ff"/>
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <!-- M Shape -->
+                    <path d="M25 85V35L45 55L60 35L75 55V35V85H90V35L60 15L30 35V85H25Z" fill="url(#logoGradient)" filter="url(#glow)"/>
+                    <!-- Circuit Nodes -->
+                    <circle cx="30" cy="35" r="4" fill="#1e90ff"/>
+                    <circle cx="45" cy="55" r="3" fill="#4da6ff"/>
+                    <circle cx="75" cy="55" r="3" fill="#4da6ff"/>
+                    <circle cx="90" cy="35" r="4" fill="#1e90ff"/>
+                    <!-- Circuit Lines -->
+                    <line x1="25" y1="35" x2="30" y2="35" stroke="#1e90ff" stroke-width="2"/>
+                    <line x1="75" y1="55" x2="90" y2="55" stroke="#1e90ff" stroke-width="2"/>
+                    <line x1="90" y1="55" x2="90" y2="35" stroke="#1e90ff" stroke-width="2"/>
+                </svg>
+            </div>
+            <h1 class="loading-title">WorkView</h1>
+            <p class="loading-subtitle">Powered by MiraTech Industries</p>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <p class="loading-status" id="loading-status">Initializing application...</p>
+        </div>
+        <div class="loading-footer">
+            <p>"Innovating Today, Building Tomorrow"</p>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app" class="app-container hidden">
+        <!-- Navigation -->
+        <nav class="main-nav" id="main-nav">
+            <div class="nav-brand">
+                <svg width="40" height="40" viewBox="0 0 120 120" fill="none">
+                    <path d="M25 85V35L45 55L60 35L75 55V35V85H90V35L60 15L30 35V85H25Z" fill="url(#logoGradient)"/>
+                </svg>
+                <span class="brand-text">WorkView</span>
+            </div>
+            <div class="nav-links" id="nav-links">
+                <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#documents" class="nav-link" data-page="documents">
+                    <i data-lucide="file-text"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#customers" class="nav-link" data-page="customers">
+                    <i data-lucide="users"></i>
+                    <span>Customers</span>
+                </a>
+                <a href="#products" class="nav-link" data-page="products">
+                    <i data-lucide="package"></i>
+                    <span>Products</span>
+                </a>
+            </div>
+            <div class="nav-actions">
+                <div class="subscription-badge" id="subscription-badge" style="display: none;">
+                    <i data-lucide="crown"></i>
+                    <span id="subscription-text">Premium</span>
+                </div>
+                <div class="nav-user" id="nav-user">
+                    <button class="btn-icon" id="user-menu-btn">
+                        <i data-lucide="user"></i>
+                    </button>
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="user-info" id="user-info"></div>
+                        <div class="dropdown-divider"></div>
+                        <a href="#settings" class="dropdown-item">
+                            <i data-lucide="settings"></i>
+                            Settings
+                        </a>
+                        <a href="#" class="dropdown-item" id="logout-btn">
+                            <i data-lucide="log-out"></i>
+                            Sign Out
+                        </a>
+                    </div>
+                </div>
+                <button class="btn-icon nav-toggle" id="nav-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Admin Navigation (visible only for admins) -->
+        <nav class="admin-nav" id="admin-nav" style="display: none;">
+            <div class="admin-brand">
+                <i data-lucide="shield"></i>
+                <span>Admin Panel</span>
+            </div>
+            <div class="admin-links" id="admin-links">
+                <a href="#admin-users" class="nav-link" data-page="admin-users">
+                    <i data-lucide="user-cog"></i>
+                    <span>Users</span>
+                </a>
+                <a href="#admin-subscriptions" class="nav-link" data-page="admin-subscriptions">
+                    <i data-lucide="credit-card"></i>
+                    <span>Subscriptions</span>
+                </a>
+                <a href="#admin-settings" class="nav-link" data-page="admin-settings">
+                    <i data-lucide="sliders"></i>
+                    <span>System</span>
+                </a>
+                <a href="#admin-logs" class="nav-link" data-page="admin-logs">
+                    <i data-lucide="activity"></i>
+                    <span>Logs</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="main-content">
+            <!-- Dashboard Page -->
+            <div class="page" id="page-dashboard">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Dashboard</h1>
+                        <p class="page-subtitle">Welcome back! Here's your business overview.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" id="refresh-dashboard">
+                            <i data-lucide="refresh-cw"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid" id="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #1e90ff20, #1e90ff10);">
+                            <i data-lucide="file-text" style="color: #1e90ff;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Total Documents</p>
+                            <p class="stat-value" id="stat-documents">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #38a16920, #38a16910);">
+                            <i data-lucide="dollar-sign" style="color: #38a169;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Total Revenue</p>
+                            <p class="stat-value" id="stat-revenue">$0.00</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #d69e2e20, #d69e2e10);">
+                            <i data-lucide="users" style="color: #d69e2e;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Customers</p>
+                            <p class="stat-value" id="stat-customers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #e53e3e20, #e53e3e10);">
+                            <i data-lucide="package" style="color: #e53e3e;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Products</p>
+                            <p class="stat-value" id="stat-products">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Recent Activity -->
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Quick Actions</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="quick-actions">
+                                <button class="quick-action-btn" id="btn-new-invoice">
+                                    <i data-lucide="file-plus"></i>
+                                    <span>New Invoice</span>
+                                </button>
+                                <button class="quick-action-btn" id="btn-new-receipt">
+                                    <i data-lucide="receipt"></i>
+                                    <span>New Receipt</span>
+                                </button>
+                                <button class="quick-action-btn" id="btn-new-quotation">
+                                    <i data-lucide="clipboard-list"></i>
+                                    <span>New Quote</span>
+                                </button>
+                                <button class="quick-action-btn" id="btn-add-customer">
+                                    <i data-lucide="user-plus"></i>
+                                    <span>Add Customer</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Activity</h3>
+                            <a href="#documents" class="card-link">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="activity-list">
+                                <div class="activity-empty">
+                                    <i data-lucide="inbox"></i>
+                                    <p>No recent activity</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Revenue Overview</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenue-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Document Types</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="documents-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Page -->
+            <div class="page hidden" id="page-documents">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Documents</h1>
+                        <p class="page-subtitle">Manage your invoices, receipts, and quotations.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btn-create-document">
+                            <i data-lucide="plus"></i>
+                            New Document
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="documents-search" placeholder="Search documents...">
+                    </div>
+                    <select id="document-type-filter" class="filter-select">
+                        <option value="">All Types</option>
+                        <option value="invoice">Invoice</option>
+                        <option value="receipt">Receipt</option>
+                        <option value="quotation">Quotation</option>
+                    </select>
+                    <select id="document-status-filter" class="filter-select">
+                        <option value="">All Status</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <!-- Documents Table -->
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table" id="documents-table">
+                            <thead>
+                                <tr>
+                                    <th>Document #</th>
+                                    <th>Type</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="documents-tbody">
+                                <tr class="table-empty">
+                                    <td colspan="7">
+                                        <i data-lucide="file-text"></i>
+                                        <p>No documents found</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-pagination" id="documents-pagination">
+                        <button class="btn btn-sm" id="prev-page" disabled>
+                            <i data-lucide="chevron-left"></i>
+                            Previous
+                        </button>
+                        <span class="pagination-info" id="pagination-info">Page 1 of 1</span>
+                        <button class="btn btn-sm" id="next-page" disabled>
+                            Next
+                            <i data-lucide="chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Page -->
+            <div class="page hidden" id="page-customers">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Customers</h1>
+                        <p class="page-subtitle">Manage your customer database.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btn-add-customer-page">
+                            <i data-lucide="plus"></i>
+                            Add Customer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="customers-search" placeholder="Search customers...">
+                    </div>
+                </div>
+
+                <!-- Customers Grid -->
+                <div class="customers-grid" id="customers-grid">
+                    <div class="customer-card">
+                        <div class="customer-avatar">
+                            <i data-lucide="user"></i>
+                        </div>
+                        <div class="customer-info">
+                            <h4>John Doe</h4>
+                            <p>john.doe@email.com</p>
+                            <span class="customer-phone">+1 234 567 890</span>
+                        </div>
+                        <div class="customer-actions">
+                            <button class="btn-icon btn-sm" title="Edit">
+                                <i data-lucide="edit-2"></i>
+                            </button>
+                            <button class="btn-icon btn-sm" title="Delete">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Page -->
+            <div class="page hidden" id="page-products">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Products</h1>
+                        <p class="page-subtitle">Manage your product catalog.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" id="btn-export-products">
+                            <i data-lucide="download"></i>
+                            Export CSV
+                        </button>
+                        <button class="btn btn-primary" id="btn-add-product">
+                            <i data-lucide="plus"></i>
+                            Add Product
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="products-search" placeholder="Search products...">
+                    </div>
+                    <select id="products-category-filter" class="filter-select">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table" id="products-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-tbody">
+                                <tr class="table-empty">
+                                    <td colspan="5">
+                                        <i data-lucide="package"></i>
+                                        <p>No products found</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div class="page hidden" id="page-settings">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Settings</h1>
+                        <p class="page-subtitle">Configure your account and business settings.</p>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Business Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Business Information</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="business-settings-form">
+                                <div class="form-group">
+                                    <label for="business-name">Business Name</label>
+                                    <input type="text" id="business-name" placeholder="Your Business Name">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="business-email">Email</label>
+                                        <input type="email" id="business-email" placeholder="business@email.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="business-phone">Phone</label>
+                                        <input type="tel" id="business-phone" placeholder="+1 234 567 890">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="business-address">Address</label>
+                                    <textarea id="business-address" rows="2" placeholder="Your business address"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    Save Changes
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Branding Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Branding</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="branding-settings-form">
+                                <div class="form-group">
+                                    <label for="brand-color">Brand Color</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="brand-color" value="#1e90ff">
+                                        <input type="text" id="brand-color-text" value="#1e90ff" placeholder="#1e90ff">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="letterhead-upload">Letterhead Image (for PDF)</label>
+                                    <div class="file-upload" id="letterhead-upload-area">
+                                        <input type="file" id="letterhead-upload" accept="image/*" hidden>
+                                        <i data-lucide="upload"></i>
+                                        <p>Click or drag to upload letterhead image</p>
+                                        <span>Recommended size: 600px x 200px, PNG or JPG</span>
+                                    </div>
+                                    <div class="letterhead-preview" id="letterhead-preview" style="display: none;">
+                                        <img id="letterhead-img" src="" alt="Letterhead Preview">
+                                        <button type="button" class="btn btn-sm btn-danger" id="remove-letterhead">
+                                            <i data-lucide="trash-2"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    Save Branding
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- VAT Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Tax Configuration</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="vat-settings-form">
+                                <div class="form-group">
+                                    <label for="vat-rate">VAT Rate (%)</label>
+                                    <div class="input-with-icon">
+                                        <input type="number" id="vat-rate" value="15" min="0" max="100" step="0.01">
+                                        <i data-lucide="percent"></i>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    Save Tax Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Subscription</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="subscription-info" id="subscription-info">
+                                <div class="subscription-status">
+                                    <span class="status-badge active">Active</span>
+                                    <span class="plan-name">Monthly Plan</span>
+                                </div>
+                                <p class="subscription-expiry">Expires: January 1, 2027</p>
+                                <div class="subscription-actions">
+                                    <button class="btn btn-secondary" id="btn-manage-subscription">
+                                        <i data-lucide="credit-card"></i>
+                                        Manage Subscription
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Pages -->
+            <div class="page hidden" id="page-admin-users">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">User Management</h1>
+                        <p class="page-subtitle">Manage user accounts and access levels.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btn-add-user">
+                            <i data-lucide="user-plus"></i>
+                            Add User
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table" id="users-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Access Level</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <tr class="table-empty">
+                                    <td colspan="6">
+                                        <i data-lucide="users"></i>
+                                        <p>No users found</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page hidden" id="page-admin-subscriptions">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Subscriptions</h1>
+                        <p class="page-subtitle">Monitor and manage subscriptions.</p>
+                    </div>
+                </div>
+
+                <!-- Subscription Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #1e90ff20, #1e90ff10);">
+                            <i data-lucide="users" style="color: #1e90ff;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Total Subscribers</p>
+                            <p class="stat-value" id="stat-subscribers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #38a16920, #38a16910);">
+                            <i data-lucide="check-circle" style="color: #38a169;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Active</p>
+                            <p class="stat-value" id="stat-active-subs">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #d69e2e20, #d69e2e10);">
+                            <i data-lucide="clock" style="color: #d69e2e;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Expiring Soon</p>
+                            <p class="stat-value" id="stat-expiring">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #e53e3e20, #e53e3e10);">
+                            <i data-lucide="x-circle" style="color: #e53e3e;"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Expired</p>
+                            <p class="stat-value" id="stat-expired">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscriptions Table -->
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table" id="subscriptions-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Plan</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Expiry Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subscriptions-tbody">
+                                <tr class="table-empty">
+                                    <td colspan="6">
+                                        <i data-lucide="credit-card"></i>
+                                        <p>No subscriptions found</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page hidden" id="page-admin-settings">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">System Settings</h1>
+                        <p class="page-subtitle">Configure system-wide settings.</p>
+                    </div>
+                </div>
+
+                <div class="settings-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Email Configuration (Resend)</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="email-settings-form">
+                                <div class="form-group">
+                                    <label for="resend-api-key">Resend API Key</label>
+                                    <input type="password" id="resend-api-key" placeholder="re_xxxxxxxxxxxx">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email-from">From Email</label>
+                                    <input type="email" id="email-from" placeholder="noreply@yourdomain.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="email-from-name">From Name</label>
+                                    <input type="text" id="email-from-name" placeholder="WorkView">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    Save Email Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Payment Settings</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="payment-settings-form">
+                                <div class="form-group">
+                                    <label for="stripe-key">Stripe API Key</label>
+                                    <input type="password" id="stripe-key" placeholder="sk_live_xxxxx">
+                                </div>
+                                <div class="form-group">
+                                    <label for="monthly-price">Monthly Price ($)</label>
+                                    <input type="number" id="monthly-price" value="29.99" min="0" step="0.01">
+                                </div>
+                                <div class="form-group">
+                                    <label for="yearly-price">Yearly Price ($)</label>
+                                    <input type="number" id="yearly-price" value="299.99" min="0" step="0.01">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i data-lucide="save"></i>
+                                    Save Payment Settings
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Firebase Configuration</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="config-status">
+                                <div class="status-item">
+                                    <span class="status-dot connected"></span>
+                                    <span>Firebase Connected</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-dot connected"></span>
+                                    <span>Firestore Active</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-dot connected"></span>
+                                    <span>Storage Ready</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page hidden" id="page-admin-logs">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">Activity Logs</h1>
+                        <p class="page-subtitle">Monitor system activities and events.</p>
+                    </div>
+                    <div class="page-actions">
+                        <button class="btn btn-secondary" id="btn-export-logs">
+                            <i data-lucide="download"></i>
+                            Export Logs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table class="data-table" id="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-tbody">
+                                <tr class="table-empty">
+                                    <td colspan="5">
+                                        <i data-lucide="activity"></i>
+                                        <p>No logs found</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Login Modal -->
+    <div class="modal" id="login-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <div class="modal-brand">
+                    <svg width="60" height="60" viewBox="0 0 120 120" fill="none">
+                        <path d="M25 85V35L45 55L60 35L75 55V35V85H90V35L60 15L30 35V85H25Z" fill="url(#logoGradient)"/>
+                    </svg>
+                    <h2>WorkView</h2>
+                </div>
+                <p class="modal-subtitle">Sign in to your account</p>
+            </div>
+            <form id="login-form" class="modal-body">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" required placeholder="Enter your password">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember-me">
+                        <span>Remember me</span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    Sign In
+                </button>
+                <div class="divider">
+                    <span>or continue with</span>
+                </div>
+                <button type="button" class="btn btn-google" id="google-login-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+            </form>
+            <div class="modal-footer">
+                <p>Don't have an account? <a href="#" id="show-register">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="register-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <div class="modal-brand">
+                    <svg width="60" height="60" viewBox="0 0 120 120" fill="none">
+                        <path d="M25 85V35L45 55L60 35L75 55V35V85H90V35L60 15L30 35V85H25Z" fill="url(#logoGradient)"/>
+                    </svg>
+                    <h2>WorkView</h2>
+                </div>
+                <p class="modal-subtitle">Create your account</p>
+            </div>
+            <form id="register-form" class="modal-body">
+                <div class="form-group">
+                    <label for="register-name">Full Name</label>
+                    <input type="text" id="register-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" required placeholder="Min 8 characters" minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="register-company">Company Name</label>
+                    <input type="text" id="register-company" placeholder="Your Company">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    Create Account
+                </button>
+            </form>
+            <div class="modal-footer">
+                <p>Already have an account? <a href="#" id="show-login">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Modal -->
+    <div class="modal" id="subscription-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2>Choose Your Plan</h2>
+                <button class="btn-icon modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3>Monthly</h3>
+                            <div class="pricing-price">
+                                <span class="currency">$</span>
+                                <span class="amount">29</span>
+                                <span class="period">/month</span>
+                            </div>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i data-lucide="check"></i> Unlimited Documents</li>
+                            <li><i data-lucide="check"></i> Unlimited Customers</li>
+                            <li><i data-lucide="check"></i> PDF Generation</li>
+                            <li><i data-lucide="check"></i> Email Support</li>
+                            <li><i data-lucide="check"></i> API Access</li>
+                        </ul>
+                        <button class="btn btn-secondary btn-full" id="btn-monthly-subscribe">
+                            Select Monthly
+                        </button>
+                    </div>
+                    <div class="pricing-card featured">
+                        <div class="pricing-badge">Best Value</div>
+                        <div class="pricing-header">
+                            <h3>Yearly</h3>
+                            <div class="pricing-price">
+                                <span class="currency">$</span>
+                                <span class="amount">299</span>
+                                <span class="period">/year</span>
+                            </div>
+                            <p class="pricing-save">Save ~17%</p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i data-lucide="check"></i> Everything in Monthly</li>
+                            <li><i data-lucide="check"></i> Priority Support</li>
+                            <li><i data-lucide="check"></i> Advanced Features</li>
+                            <li><i data-lucide="check"></i> Custom Branding</li>
+                            <li><i data-lucide="check"></i> Team Collaboration</li>
+                        </ul>
+                        <button class="btn btn-primary btn-full" id="btn-yearly-subscribe">
+                            Select Yearly
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Form -->
+                <div class="payment-form" id="payment-form" style="display: none;">
+                    <h3>Payment Details</h3>
+                    <form id="payment-form-inner">
+                        <div class="form-group">
+                            <label for="card-name">Name on Card</label>
+                            <input type="text" id="card-name" required placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label for="card-number">Card Number</label>
+                            <input type="text" id="card-number" required placeholder="1234 5678 9012 3456" maxlength="19">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="card-expiry">Expiry Date</label>
+                                <input type="text" id="card-expiry" required placeholder="MM/YY" maxlength="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="card-cvc">CVC</label>
+                                <input type="text" id="card-cvc" required placeholder="123" maxlength="4">
+                            </div>
+                        </div>
+                        <div class="payment-secure">
+                            <i data-lucide="lock"></i>
+                            <span>Secured by MasterCard</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full" id="btn-process-payment">
+                            <i data-lucide="credit-card"></i>
+                            Pay Now
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Document Modal -->
+    <div class="modal" id="document-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-xl">
+            <div class="modal-header">
+                <h2 id="document-modal-title">Create Invoice</h2>
+                <button class="btn-icon modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="document-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="doc-customer">Customer</label>
+                            <select id="doc-customer" required>
+                                <option value="">Select Customer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="doc-type">Document Type</label>
+                            <select id="doc-type" required>
+                                <option value="invoice">Invoice</option>
+                                <option value="receipt">Receipt</option>
+                                <option value="quotation">Quotation</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="items-section">
+                        <h4>Items</h4>
+                        <table class="items-table" id="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="items-tbody">
+                                <tr class="item-row">
+                                    <td>
+                                        <select class="item-product" required>
+                                            <option value="">Select Product</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="item-qty" value="1" min="1" required>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="item-price" step="0.01" required>
+                                    </td>
+                                    <td class="item-amount">$0.00</td>
+                                    <td>
+                                        <button type="button" class="btn-icon btn-remove-item">
+                                            <i data-lucide="trash-2"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm" id="btn-add-item">
+                            <i data-lucide="plus"></i>
+                            Add Item
+                        </button>
+                    </div>
+
+                    <div class="document-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="doc-subtotal">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>VAT (<span id="vat-rate-display">15</span>%):</span>
+                            <span id="doc-vat">$0.00</span>
+                        </div>
+                        <div class="total-row total-final">
+                            <span>Total:</span>
+                            <span id="doc-total">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="btn-cancel-document">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="save"></i>
+                            Create Document
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Customer Modal -->
+    <div class="modal" id="customer-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>Add Customer</h2>
+                <button class="btn-icon modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="customer-form" class="modal-body">
+                <div class="form-group">
+                    <label for="customer-name">Full Name *</label>
+                    <input type="text" id="customer-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label for="customer-email">Email</label>
+                    <input type="email" id="customer-email" placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Phone</label>
+                    <input type="tel" id="customer-phone" placeholder="+1 234 567 890">
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Address</label>
+                    <textarea id="customer-address" rows="2" placeholder="Customer address"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-customer">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save"></i>
+                        Save Customer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Product Modal -->
+    <div class="modal" id="product-modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>Add Product</h2>
+                <button class="btn-icon modal-close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <form id="product-form" class="modal-body">
+                <div class="form-group">
+                    <label for="product-name">Product Name *</label>
+                    <input type="text" id="product-name" required placeholder="Product Name">
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Category *</label>
+                    <input type="text" id="product-category" required placeholder="Category">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product-price">Price *</label>
+                        <input type="number" id="product-price" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="product-stock">Stock *</label>
+                        <input type="number" id="product-stock" required placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">Image URL</label>
+                    <input type="url" id="product-image" placeholder="https://...">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-product">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save"></i>
+                        Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/firebase.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/documents.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/products.js"></script>
+    <script src="js/subscriptions.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
