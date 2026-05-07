@@ -1,15 +1,23 @@
 // WorkView - Firebase Configuration
 // Powered by MiraTech Industries
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Firebase Configuration
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCirLwM3DiIaUphgJ4l97vcK0uMXMogFTc",
+  authDomain: "miratechindustries-workviewapp.firebaseapp.com",
+  projectId: "miratechindustries-workviewapp",
+  storageBucket: "miratechindustries-workviewapp.firebasestorage.app",
+  messagingSenderId: "900820784952",
+  appId: "1:900820784952:web:e777c69dfa0d47b47013cd",
+  measurementId: "G-MWHLRQ4K1X"
 };
+
 
 // Application Configuration
 const appConfig = {
